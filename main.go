@@ -1,17 +1,21 @@
+// TODO
+// Split main.go file into smaller scripts
+// Get icons installed
+// Hide API key input
+// Cleaner error handling
+
 package main
 
 import (
 	"encoding/json"
 	"fmt"
-	"io"
+	"github.com/fatih/color"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"strconv"
-	"strings"
 	"time"
 )
-import "github.com/fatih/color"
 
 var metWeatherCodes = map[string]string{
 	"-1": "Trace rain",
@@ -53,109 +57,223 @@ const (
 	getRegionsEndpoint = "txt/wxfcs/regionalforecast/datatype/sitelist"
 	requiredDataType   = "json"
 	applicationKeyFile = "met_application_key.txt"
+	configFileName     = "config.json"
+	maxRetries         = 10
+	retryInterval      = 2 * time.Second
 )
 
-func readAPIKey() string {
-	apiKey, err := ioutil.ReadFile("met_application_key.txt")
-	if err != nil {
-		return ""
-	}
-	return strings.TrimSpace(string(apiKey))
+type Config struct {
+	ApplicationKey string `json:"application_key"`
+	DefaultCity    string `json:"default_city"`
 }
 
-func writeAPIKey(apiKey string) error {
-	return ioutil.WriteFile("met_application_key.txt", []byte(apiKey), 0644)
+func updateDefaultCity(defaultCity string) error {
+	configData, err := readConfig()
+	if err != nil {
+		return err
+	}
+
+	configData.DefaultCity = defaultCity
+
+	return writeConfig(configData)
 }
 
-func getSiteId(city string, apiKey string) string {
-	siteListURL := fmt.Sprintf("%s/val/wxfcs/all/%s/sitelist?key=%s", baseURL, requiredDataType, apiKey)
-	res, err := http.Get(siteListURL)
+func updateAppKey(appKey string) error {
+	configData, err := readConfig()
 	if err != nil {
-		panic(err)
+		return err
 	}
 
-	defer res.Body.Close() //close body of response
+	configData.ApplicationKey = appKey
 
-	if res.StatusCode != 200 {
-		panic("There was an error connecting to the Met Office API. Please ensure your application key is correct.")
+	return writeConfig(configData)
+}
+
+func readConfig() (*Config, error) {
+	if _, err := os.Stat(configFileName); os.IsNotExist(err) {
+		// File does not exist, create it with default values
+		configData := &Config{
+			ApplicationKey: "",
+			DefaultCity:    "Bristol",
+		}
+		err := writeConfig(configData)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	body, err := io.ReadAll(res.Body)
+	file, err := ioutil.ReadFile(configFileName)
 	if err != nil {
-		panic(err)
+		return nil, err
+	}
+
+	var configData Config
+	err = json.Unmarshal(file, &configData)
+	if err != nil {
+		return nil, err
+	}
+
+	return &configData, nil
+}
+
+func writeConfig(configData *Config) error {
+	configJSON, err := json.MarshalIndent(configData, "", "    ")
+	if err != nil {
+		return err
+	}
+
+	err = ioutil.WriteFile(configFileName, configJSON, 0644)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func getConfiguration() (string, string) {
+	configData, err := readConfig()
+	handleError(err)
+
+	return configData.ApplicationKey, configData.DefaultCity
+}
+
+func input(prompt string) string {
+	fmt.Print(prompt)
+	var input string
+	fmt.Scanln(&input)
+	return input
+}
+
+func handleError(err error) {
+	if err != nil {
+		fmt.Println("Error:", err)
+		os.Exit(1)
+	}
+}
+
+func getRequest(url string, maxRetries int, retryInterval time.Duration) (int, []byte, error) {
+	// Retry strategy enabled
+	for i := 0; i < maxRetries; i++ {
+
+		// Make HTTP request
+		res, err := http.Get(url)
+		if err != nil {
+			continue // Retry on error
+		}
+
+		// Read response body
+		body, err := ioutil.ReadAll(res.Body)
+		res.Body.Close()
+
+		// Check HTTP status code
+		if res.StatusCode >= 500 {
+			fmt.Printf("Received status code %d, retrying...\n", res.StatusCode)
+			time.Sleep(retryInterval)
+			continue // Retry on 5xx status codes
+		}
+
+		// Process successful
+		return res.StatusCode, body, nil
+	}
+
+	return 0, nil, fmt.Errorf("Max retries reached")
+}
+
+func getSiteId(city string, appKey string) string {
+	siteListURL := fmt.Sprintf("%s/val/wxfcs/all/%s/sitelist?key=%s", baseURL, requiredDataType, appKey)
+	resStatus, resBody, err := getRequest(siteListURL, maxRetries, retryInterval)
+	handleError(err)
+
+	if resStatus != 200 {
+		fmt.Println("There was an error connecting to the Met Office API.")
+		os.Exit(1)
 	}
 
 	// Get the text object from web response
-	responseText := string(body)
+	responseText := string(resBody)
 
 	// Initialise a map to use for converting the text into json
 	var responseData map[string]interface{}
 
 	// Get json from text onject
 	err = json.Unmarshal([]byte(responseText), &responseData)
-	if err != nil {
-		panic("Failed to format JSON.")
-	}
+	handleError(err)
 
 	// responseData should now hold the JSON
 	locationsList := responseData["Locations"].(map[string]interface{})["Location"].([]interface{})
 
-	var areaId string
+	areaId := ""
 
 	for _, location := range locationsList {
 		loc := location.(map[string]interface{})
-		if loc["name"].(string) == "Bristol" {
+		if loc["name"].(string) == city {
 			areaId = loc["id"].(string)
 			break
 		}
 	}
-
 	if areaId == "" {
-		panic("No area ID found for Bristol.")
+		fmt.Printf("No area ID found for city %s.", city)
+		os.Exit(1)
 	}
-
 	return areaId
 }
 
 func main() {
+	appKey, defaultCity := getConfiguration()
 
-	apiKey := readAPIKey()
-	if apiKey == "" {
-		fmt.Print("Please enter your Met Application key: ")
-		fmt.Scanln(&apiKey)
-		writeAPIKey(apiKey)
+	if len(os.Args) > 1 {
+		switch os.Args[1] {
+		case "--help":
+			fmt.Println("Help options.....")
+			os.Exit(0)
+
+		case "set-default":
+			newDefault := input("Enter the name of a UK city to set as your default: ")
+			err := updateDefaultCity(newDefault)
+			handleError(err)
+			os.Exit(0)
+
+		case "set-key":
+			newAppKey := input("Please enter your Met Office Application Key: ")
+			err := updateAppKey(newAppKey)
+			handleError(err)
+			os.Exit(0)
+
+		default:
+			defaultCity = os.Args[1]
+		}
 	}
 
-	city := "Bristol" //Set Default city for if no CLI arg is provided.
-	if len(os.Args) >= 2 {
-		city = os.Args[1]
+	if appKey == "" {
+		appKey = input("Please enter your Met Office Application Key: ")
+		configData := &Config{
+			ApplicationKey: appKey,
+			DefaultCity:    defaultCity,
+		}
+		err := writeConfig(configData)
+		handleError(err)
 	}
 
-	areaId := getSiteId(city, apiKey)
+	// Script execution to show forecast starts here....
+	areaId := getSiteId(defaultCity, appKey)
 
-	forcastEndpoint := fmt.Sprintf("%s/val/wxfcs/all/%s/%s?res=3hourly&key=%s", baseURL, requiredDataType, areaId, apiKey)
-	res, err := http.Get(forcastEndpoint)
-	if err != nil {
-		panic(err)
+	forcastEndpoint := fmt.Sprintf("%s/val/wxfcs/all/%s/%s?res=3hourly&key=%s", baseURL, requiredDataType, areaId, appKey)
+	resStatus, resBody, err := getRequest(forcastEndpoint, maxRetries, retryInterval)
+	handleError(err)
+
+	if resStatus != 200 {
+		fmt.Printf("An error ocurred when getting today's forcast: %s", resStatus)
+		os.Exit(1)
 	}
 
-	defer res.Body.Close() //close body of response
+	responseText := string(resBody)
 
-	if res.StatusCode != 200 {
-		panic("An error ocurred when getting today's forcast.")
-	}
-
-	body, err := io.ReadAll(res.Body)
-	if err != nil {
-		panic("Failed to parse JSON data for today's weather.")
-	}
-
-	responseText := string(body)
 	var responseData map[string]interface{}
 
 	err = json.Unmarshal([]byte(responseText), &responseData)
 	if err != nil {
-		panic("The was an error with the Met Office API.")
+		fmt.Println("The Met office API failed to return a valid response. Please try again later.")
+		os.Exit(1)
 	}
 
 	forcastDataToday := responseData["SiteRep"].(map[string]interface{})["DV"].(map[string]interface{})["Location"].(map[string]interface{})["Period"].([]interface{})[0].(map[string]interface{})
@@ -171,9 +289,7 @@ func main() {
 
 		fTime := f["$"].(string)
 		intFtime, err := strconv.Atoi(fTime)
-		if err != nil {
-			panic(err)
-		}
+		handleError(err)
 
 		if intFtime > timeNowMinutes {
 			futureForecasts = append(futureForecasts, f)
@@ -185,13 +301,11 @@ func main() {
 		futureForecasts = append(futureForecasts, forcastDataToday["Rep"].([]interface{})[len(forcastDataToday["Rep"].([]interface{}))-1].(map[string]interface{}))
 	}
 
-	fmt.Printf("Met Office Weather forecast for %s - %s\n\n", city, date)
+	fmt.Printf("\n\nMet Office Weather forecast for %s - %s\n\n", defaultCity, date)
 	for _, forecast := range futureForecasts {
 
 		forcastTime, err := strconv.Atoi(forecast["$"].(string))
-		if err != nil {
-			panic(err)
-		}
+		handleError(err)
 
 		timeHours := forcastTime / 60
 		timeFinal := fmt.Sprintf("Time: %s:00:00", strconv.Itoa(timeHours))
@@ -209,9 +323,7 @@ func main() {
 		message := fmt.Sprintf("%s\n%s\n%s\n%s\n%s\n%s\n\n", timeFinal, weatherType, temperature, feelsLike, windSpeed, rainChance)
 
 		rainChanceInt, err := strconv.Atoi(forecast["Pp"].(string))
-		if err != nil {
-			panic(err)
-		}
+		handleError(err)
 
 		if rainChanceInt > 50 {
 			color.Red(message)
