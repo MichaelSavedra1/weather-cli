@@ -23,7 +23,7 @@ func main() {
 			diffLocation := "weather {arg} - Gets the forecast for a location whatever city/town is specified as the arg"
 
 			fmt.Printf(
-				"Available arguments:\n%s\n%s\n%s\n%s",
+				"Available arguments:\n\n%s\n\n%s\n\n%s\n\n%s",
 				normal, setDef, setKey, diffLocation,
 			)
 			os.Exit(0)
