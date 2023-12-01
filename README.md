@@ -17,7 +17,7 @@ This will change inline with your terminal's theme. If any of the icons do not p
 ### Installation
 
 ```
-go install github.comMichaelSavedra1/weather-cli/weather@latest
+go install github.com/MichaelSavedra1/weather-cli/weather@latest
 ```
 
 ### Usage after installing
