@@ -10,6 +10,11 @@ The CLI is currently configured to always return the weather predicted over the 
   <img src="./resources/media/example.png?raw=true" alt="Example" />
 </p>
 
+<p align="center">
+  <img src="./resources/media/swappy-20231201-194203.png?raw=true" alt="Example" />
+</p>
+
+
 This will change inline with your terminal's theme. If any of the icons do not parse, you may need to install a font that is compatible with color/emojis such as [NerdFonts](https://docs.rockylinux.org/books/nvchad/nerd_fonts/)
 
 *`weather` is currently only compatible with Linux and MacOS machines.*
