@@ -22,7 +22,7 @@ This will change inline with your terminal's theme. If any of the icons do not p
 ### Installation
 
 ```
-go install github.com/MichaelSavedra1/weather@latest
+go install github.com/MichaelSavedra1/weather/weather@latest
 ```
 
 ### Usage after installing
