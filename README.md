@@ -24,6 +24,7 @@ This will change inline with your terminal's theme. If any of the icons do not p
 ```
 go install github.com/MichaelSavedra1/weather/weather@latest
 ```
+This will download the executable to `${PWD}/go/bin`. Move the `weather` binary file from here to your local `/bin` or set up a custom alias so that the `weather` command can be ran from any dir. 
 
 ### Usage after installing
 1. Create a free [Met Office Data Point account](https://register.metoffice.gov.uk/MyAccountClient/account/view) (easy sign-up)

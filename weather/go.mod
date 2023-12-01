@@ -1,4 +1,4 @@
-module github.com/MichaelSavedra1/weather
+module github.com/MichaelSavedra1/weather/weather
 
 go 1.21.4
 
