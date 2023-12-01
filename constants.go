@@ -11,6 +11,8 @@ var weatherIcons = map[string]string{
 	"Thunder Cloud": "\033[38;2;255;0;0m🌩\033[0m",
 	"Snow":          "\033[38;2;255;255;255m❄\033[0m",
 	"Wind":          "\033[38;2;100;149;237m🌫\033[0m",
+	"Night Other":   "🌚",
+	"Night Clear":   "🌛",
 	"Border":        "🌐",
 }
 
@@ -35,16 +37,16 @@ type WeatherInfo struct {
 // Weather types as defined by the Met office
 var metWeatherCodes = map[string]WeatherInfo{
 	"-1": {Description: "Trace rain", Icon: weatherIcons["Rainy Cloud"]},
-	"0":  {Description: "Clear night", Icon: weatherIcons["Sun"]},
+	"0":  {Description: "Clear night", Icon: weatherIcons["Nigh Clear"]},
 	"1":  {Description: "Sunny day", Icon: weatherIcons["Sun"]},
-	"2":  {Description: "Partly cloudy (night)", Icon: weatherIcons["Sunny Cloud"]},
+	"2":  {Description: "Partly cloudy (night)", Icon: weatherIcons["Night Other"]},
 	"3":  {Description: "Partly cloudy (day)", Icon: weatherIcons["Sunny Cloud"]},
 	"4":  {Description: "Not used", Icon: ""},
 	"5":  {Description: "Mist", Icon: weatherIcons["Cloud"]},
 	"6":  {Description: "Fog", Icon: weatherIcons["Cloud"]},
 	"7":  {Description: "Cloudy", Icon: weatherIcons["Cloud"]},
 	"8":  {Description: "Overcast", Icon: weatherIcons["Cloud"]},
-	"9":  {Description: "Light rain shower (night)", Icon: weatherIcons["Rainy Cloud"]},
+	"9":  {Description: "Light rain shower (night)", Icon: weatherIcons["Night Other"]},
 	"10": {Description: "Light rain shower (day)", Icon: weatherIcons["Rainy Cloud"]},
 	"11": {Description: "Drizzle", Icon: weatherIcons["Rainy Cloud"]},
 	"12": {Description: "Light rain", Icon: weatherIcons["Rainy Cloud"]},
