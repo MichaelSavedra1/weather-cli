@@ -37,7 +37,7 @@ type WeatherInfo struct {
 // Weather types as defined by the Met office
 var metWeatherCodes = map[string]WeatherInfo{
 	"-1": {Description: "Trace rain", Icon: weatherIcons["Rainy Cloud"]},
-	"0":  {Description: "Clear night", Icon: weatherIcons["Nigh Clear"]},
+	"0":  {Description: "Clear night", Icon: weatherIcons["Night Clear"]},
 	"1":  {Description: "Sunny day", Icon: weatherIcons["Sun"]},
 	"2":  {Description: "Partly cloudy (night)", Icon: weatherIcons["Night Other"]},
 	"3":  {Description: "Partly cloudy (day)", Icon: weatherIcons["Sunny Cloud"]},
