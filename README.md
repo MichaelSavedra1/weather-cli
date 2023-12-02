@@ -7,11 +7,11 @@ Add your Met Office API key to return real time wheather data to your exact loca
 The CLI is currently configured to always return the weather predicted over the rest of the current day in three hour intervals. The last interval available from the Met Office API is 21:00, so if the CLI is used after this time, the most recent entry will be all that is displayed. 
 
 <p align="center">
-  <img src="./resources/media/example.png?raw=true" alt="Example" />
+  <img src="./resources/media/swappy-20231202-124415.png?raw=true" alt="Example" />
 </p>
 
 <p align="center">
-  <img src="./resources/media/swappy-20231201-194203.png?raw=true" alt="Example" />
+  <img src="./resources/media/swappy-20231202-124719.png?raw=true" alt="Example" />
 </p>
 
 
