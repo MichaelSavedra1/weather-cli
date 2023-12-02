@@ -6,7 +6,7 @@ INSTALL_PATH ?= "/usr/bin/"
 all: build run
 
 install:
-	go build -o "${INSTALL_PATH}${BINARY_NAME}"
+	cd weather && go build -o "${INSTALL_PATH}${BINARY_NAME}"
 
 build:
 	go build -o "${BINARY_NAME}"
