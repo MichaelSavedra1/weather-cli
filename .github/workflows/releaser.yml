@@ -16,7 +16,7 @@ jobs:
           go-version: 1.21.4
 
       - name: Change working directory
-        run: cd weather
+        run: cd weather && ls
         shell: bash
 
       - name: GoReleaser Action
