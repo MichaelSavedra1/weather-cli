@@ -1,10 +1,12 @@
 BINARY_NAME=weather
-INSTALL_DIR="/usr/bin/"
- 
+
+# Use INSTALL_PATH from the environment, or default to "/usr/bin/"
+INSTALL_PATH ?= "/usr/bin/"
+
 all: build run
- 
+
 install:
-	go build -o "${INSTALL_DIR}${BINARY_NAME}"
+	go build -o "${INSTALL_PATH}${BINARY_NAME}"
 
 build:
 	go build -o "${BINARY_NAME}"
@@ -12,7 +14,7 @@ build:
 run:
 	go build -o ${BINARY_NAME}
 	./${BINARY_NAME}
- 
+
 clean:
 	go clean
 	rm ${BINARY_NAME}
