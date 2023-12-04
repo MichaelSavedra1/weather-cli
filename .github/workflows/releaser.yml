@@ -15,9 +15,6 @@ jobs:
         with:
           go-version: 1.21.4
 
-      - name: Change working directory
-        run: cd weather && ls
-
       - name: GoReleaser Action
         uses: goreleaser/goreleaser-action@v2.9.1
         with:
