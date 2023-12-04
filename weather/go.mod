@@ -1,6 +1,6 @@
 module github.com/MichaelSavedra1/weather/weather
 
-go 1.23
+go 1.21.4
 
 require (
 	github.com/fatih/color v1.16.0 // indirect
