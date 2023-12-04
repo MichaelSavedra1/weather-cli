@@ -19,14 +19,14 @@ This will change inline with your terminal's theme. If any of the icons do not p
 
 *`weather` is currently only compatible with Linux and MacOS machines.*
 
-### Installation
+## Installation
 
 ```
 go install github.com/MichaelSavedra1/weather/weather@latest
 ```
 This will download the executable to `${HOME}/go/bin`. Move the `weather` binary file from here to your local `/bin` / `/usr/bin` / `/.local/bin` or set up a custom alias so that the `weather` command can be ran from any dir. 
 
-## MacOS
+### MacOS
 On MacOS, the entire install can be completed with teh following command: 
 ```
 cd /usr/local/bin && sudo go install github.com/MichaelSavedra1/weather/weather@latest && cd
