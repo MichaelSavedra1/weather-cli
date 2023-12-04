@@ -31,9 +31,10 @@ On MacOS, the entire install can be completed with teh following command:
 ```
 cd /usr/local/bin && sudo go install github.com/MichaelSavedra1/weather/weather@latest && cd
 ```
+### Windows
+The main installation command will download a .exe file that can be set to a CMD alias/ran manually. 
 
-
-### Usage after installing
+## Usage after installing
 1. Create a free [Met Office Data Point account](https://register.metoffice.gov.uk/MyAccountClient/account/view) (easy sign-up)
 2. Copy your application key from the [My Account](https://register.metoffice.gov.uk/MyAccountClient/account/view) page 
 3. Run the following command in your terminal and you will be prompte to supply your application key

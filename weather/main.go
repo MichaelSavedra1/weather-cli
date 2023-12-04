@@ -125,8 +125,7 @@ func main() {
 			)
 			fmt.Printf(message)
 		}
+		println(separatorLine)
 	}
-
-	println(separatorLine)
 
 }
