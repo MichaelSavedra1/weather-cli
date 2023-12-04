@@ -9,13 +9,13 @@ import (
 	"time"
 )
 
-func getForecast(areaId string, appKey string) (string, []map[string]interface{}) {
+func getForecast(areaId string, appKey string, extended bool) ([]map[string]interface{}, error) {
 	forcastEndpoint := fmt.Sprintf(
 		"%s/val/wxfcs/all/%s/%s?res=3hourly&key=%s",
 		baseURL, requiredDataType, areaId, appKey,
 	)
 
-	resStatus, resBody, err := getRequest(forcastEndpoint, maxRetries, retryInterval)
+	resStatus, resBody, err := getRequest(forcastEndpoint, maxRetries, retryInterval) // Get forecast data
 	handleError(err)
 
 	if resStatus != 200 {
@@ -33,19 +33,22 @@ func getForecast(areaId string, appKey string) (string, []map[string]interface{}
 		os.Exit(1)
 	}
 
+	var responseArray []map[string]interface{} // this is the response onject for the function
+
 	// Slice into the returned map from the met (full format available in the resources dir)
-	forcastDataToday := responseData["SiteRep"].(map[string]interface{})["DV"].(map[string]interface{})["Location"].(map[string]interface{})["Period"].([]interface{})[0].(map[string]interface{})
-	date := forcastDataToday["value"].(string)
+	allForecasts := responseData["SiteRep"].(map[string]interface{})["DV"].(map[string]interface{})["Location"].(map[string]interface{})["Period"].([]interface{})
+
+	forecastsToday := allForecasts[0].(map[string]interface{})
+	dateToday := forecastsToday["value"].(string)
 
 	// get current time as logic to decide which forecasts form today to include
 	currentUTC := time.Now().UTC()
 	timeNowMinutes := currentUTC.Hour()*60 + currentUTC.Minute()
 
-	futureForecasts := make([]map[string]interface{}, 0)
+	futureForecasts := make([]map[string]interface{}, 0) // empty list for today's future forecasts
 
-	for _, forecast := range forcastDataToday["Rep"].([]interface{}) {
+	for _, forecast := range forecastsToday["Rep"].([]interface{}) { // only append future times to current day section
 		f := forecast.(map[string]interface{})
-
 		fTime := f["$"].(string)
 		intFtime, err := strconv.Atoi(fTime)
 		handleError(err)
@@ -55,11 +58,36 @@ func getForecast(areaId string, appKey string) (string, []map[string]interface{}
 		}
 	}
 
-	if len(futureForecasts) == 0 {
-		// If no future forecasts, get the most recent entry (9 PM)
-		futureForecasts = append(futureForecasts, forcastDataToday["Rep"].([]interface{})[len(forcastDataToday["Rep"].([]interface{}))-1].(map[string]interface{}))
+	if len(futureForecasts) == 0 { // If no future forecasts, get the most recent entry (9 PM)
+		futureForecasts = append(futureForecasts, forecastsToday["Rep"].([]interface{})[len(forecastsToday["Rep"].([]interface{}))-1].(map[string]interface{}))
 	}
-	return date, futureForecasts
+
+	todaysForecasts := make(map[string]interface{}) // create instance of map to add to return list
+	todaysForecasts["date"] = dateToday
+	todaysForecasts["forecasts"] = futureForecasts
+
+	responseArray = append(responseArray, todaysForecasts) // add struct instance to response array object
+
+	if extended { //add additional forecasts if requested
+		for _, forecast := range allForecasts[1:] { // loop through each dict in forecast list
+
+			additionalForecast := make(map[string]interface{}) // build dict for each additional day to store date and forecast data
+			futureData := make([]map[string]interface{}, 0)    // build empty list to append to the forecast key of 'additionalForecast'
+			f := forecast.(map[string]interface{})             // convert curernt item into map format
+			additionalForecast["date"] = f["value"].(string)   // add date to date key
+
+			for _, item := range f["Rep"].([]interface{}) {
+				i := item.(map[string]interface{})
+				futureData = append(futureData, i)
+			}
+			additionalForecast["forecasts"] = futureData
+			// append the extended forecast to the return array
+			responseArray = append(responseArray, additionalForecast)
+		}
+
+	}
+
+	return responseArray, nil
 }
 
 func getSiteId(area string, appKey string) string {
@@ -75,18 +103,14 @@ func getSiteId(area string, appKey string) string {
 		os.Exit(1)
 	}
 
-	// Get the text object from web response
-	responseText := string(resBody)
+	responseText := string(resBody) // Get the text object from web response
 
-	// Initialise a map to use for converting the text into json
-	var responseData map[string]interface{}
+	var responseData map[string]interface{} // Initialise a map to use for converting the text into json
 
-	// Get json from text onject
-	err = json.Unmarshal([]byte(responseText), &responseData)
+	err = json.Unmarshal([]byte(responseText), &responseData) // Get json from text onject
 	handleError(err)
 
-	// responseData should now hold the JSON
-	locationsList := responseData["Locations"].(map[string]interface{})["Location"].([]interface{})
+	locationsList := responseData["Locations"].(map[string]interface{})["Location"].([]interface{}) // responseData should now hold the JSON
 
 	areaId := "" // Set default val for error handline
 
