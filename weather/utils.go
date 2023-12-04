@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/fatih/color"
 )
@@ -23,10 +24,9 @@ func handleError(err error) { // Avoids repeat code by handling errors in a unif
 }
 
 // Color-code a value returned from the Met API based on it's value and type
-func getColorEncoded(value string, threshold int, symbol string) string {
-	// symbol arg will either hold "C", "mph" or "%", different thresholds assigned to each
+func getColorEncoded(value string, symbol string) string {
 	// value arg will hold an integer in string format
-	val, err := strconv.Atoi(value) // convert string to int so threshold can be evealuated
+	val, err := strconv.Atoi(value)
 	if err != nil {
 		return value // return original string for non-numeric values
 	}
@@ -40,11 +40,11 @@ func getColorEncoded(value string, threshold int, symbol string) string {
 	// assign color and return val based on type and value
 	if symbol == "C" {
 		switch {
-		case val > threshold+10:
+		case val <= 5:
 			colorString = fmt.Sprint(red(value), red(symbol)) // Red
-		case val < threshold/2:
+		case val >= 30:
 			colorString = fmt.Sprint(red(value), red(symbol)) // Red
-		case val > threshold/2 && val < threshold:
+		case val > 5 && val < 15:
 			colorString = fmt.Sprint(yellow(value), yellow(symbol)) // Yellow
 		default:
 			colorString = fmt.Sprint(green(value), green(symbol)) // Green
@@ -52,9 +52,9 @@ func getColorEncoded(value string, threshold int, symbol string) string {
 
 	} else if symbol == "mph" {
 		switch {
-		case val > threshold+10:
+		case val >= 25:
 			colorString = fmt.Sprint(red(value), red(symbol)) // Red
-		case val > threshold:
+		case val < 25 && val > 15:
 			colorString = fmt.Sprint(yellow(value), yellow(symbol)) // Yellow
 		default:
 			colorString = fmt.Sprint(green(value), green(symbol)) // Green
@@ -63,9 +63,9 @@ func getColorEncoded(value string, threshold int, symbol string) string {
 	} else if symbol == "%" {
 		returnString := fmt.Sprint(value + "%%")
 		switch {
-		case val > threshold:
+		case val >= 50:
 			colorString = fmt.Sprint(red(returnString)) // Red
-		case val > threshold/2 && val < threshold:
+		case val < 50 && val >= 25:
 			colorString = fmt.Sprint(yellow(returnString)) // Yellow
 		default:
 			colorString = fmt.Sprint(green(returnString)) // Green
@@ -97,4 +97,12 @@ func formatColor(value string, choice string) string {
 
 	return returnString
 
+}
+
+func formatDate(date string) (string, error) {
+	// returns a reformatted date from a delta format
+	removedDelta := strings.Split(date, "Z")
+	partitionedDate := strings.Split(removedDelta[0], "-")
+	dateFinal := fmt.Sprintf("%s-%s-%s", partitionedDate[2], partitionedDate[1], partitionedDate[0])
+	return dateFinal, nil
 }

@@ -7,11 +7,11 @@ Add your Met Office API key to return real time wheather data to your exact loca
 The CLI is currently configured to always return the weather predicted over the rest of the current day in three hour intervals. The last interval available from the Met Office API is 21:00, so if the CLI is used after this time, the most recent entry will be all that is displayed. 
 
 <p align="center">
-  <img src="./resources/media/swappy-20231202-124415.png?raw=true" alt="Example" />
+  <img src="./resources/media/swappy-20231202-124415.png?raw=true" alt="Example1" />
 </p>
 
 <p align="center">
-  <img src="./resources/media/swappy-20231202-124719.png?raw=true" alt="Example" />
+  <img src="./resources/media/swappy-20231202-124719.png?raw=true" alt="Example2" />
 </p>
 
 
@@ -24,7 +24,14 @@ This will change inline with your terminal's theme. If any of the icons do not p
 ```
 go install github.com/MichaelSavedra1/weather/weather@latest
 ```
-This will download the executable to `${PWD}/go/bin`. Move the `weather` binary file from here to your local `/bin` or set up a custom alias so that the `weather` command can be ran from any dir. 
+This will download the executable to `${HOME}/go/bin`. Move the `weather` binary file from here to your local `/bin` / `/usr/bin` / `/.local/bin` or set up a custom alias so that the `weather` command can be ran from any dir. 
+
+## MacOS
+On MacOS, the entire install can be completed with teh following command: 
+```
+cd /usr/local/bin && sudo go install github.com/MichaelSavedra1/weather/weather@latest && cd
+```
+
 
 ### Usage after installing
 1. Create a free [Met Office Data Point account](https://register.metoffice.gov.uk/MyAccountClient/account/view) (easy sign-up)
@@ -35,6 +42,7 @@ weather
 ```
 4. Use `weather --help` to see a list of all available commands
 5. Set your default location by using the `weather set-default` arg. To see a full list of locations, check the resources/met-api directory
+6. Use `weather --extended` or `weather {arg} --extended` to see the next 5 days worth of met office weather data
 
 ### License
 
