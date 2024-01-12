@@ -20,7 +20,7 @@ This will change inline with your terminal's theme. If any of the icons do not p
 ## Installation
 
 ```
-go install github.com/MichaelSavedra1/weather/weather@latest
+go install github.com/savedra1/weather/weather@latest
 ```
 This will download the executable to `${HOME}/go/bin`. Move the `weather` binary file from here to your local `/bin` / `/usr/bin` / `/.local/bin` or set up a custom alias so that the `weather` command can be ran from any dir. 
 
