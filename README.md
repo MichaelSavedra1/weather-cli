@@ -27,7 +27,7 @@ This will download the executable to `${HOME}/go/bin`. Move the `weather` binary
 ### MacOS
 On MacOS, the entire install can be completed with the following command: 
 ```
-sudo export GOBIN=/usr/local/bin && sudo go install github.com/MichaelSavedra1/weather/weather@latest 
+sudo export GOBIN=/usr/local/bin && sudo go install github.com/savedra1/weather/weather@latest 
 ```
 ### Windows
 The main installation command will download a .exe file that can be set to a CMD alias/ran manually. 
