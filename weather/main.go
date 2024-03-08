@@ -5,57 +5,76 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"strconv"
 	"strings"
 )
 
+var (
+	help       = flag.Bool("help", false, "show help message.")
+	v          = flag.Bool("v", false, "show app version.")
+	extended   = flag.Bool("extended", false, "extended forcast")
+	setDefault = flag.Bool("set-default", false, "update default city")
+	setKey     = flag.Bool("set-key", false, "update met office api key")
+)
+
 func main() {
+	flag.Parse()
 	appKey, defaultLocation := getConfiguration() // Call function to ensure config file exists
-	extended := false
+	var e = false                                 // not extended
 
-	if len(os.Args) > 2 && os.Args[2] == "--extended" {
-		extended = true
-		defaultLocation = os.Args[1]
-
-	} else if len(os.Args) > 2 && os.Args[2] != "--extended" {
-		fmt.Println("Arguments not recognised. Please use the 'weather --help' command.")
+	if flag.NFlag() > 1 {
+		fmt.Println("`weather` takes exactly one arg - see `weather --help`")
 		return
-
-	} else if len(os.Args) > 1 { // check for user inut
-		switch os.Args[1] {
-		case "--help": // Show available commands
+	}
+	if flag.NArg() == 0 && flag.NFlag() == 1 {
+		if *help {
 			normal := "| 'weather' -> gets the forecast for the default location (will be Bristol if not configured)"
-			setDef := "| 'weather set-default' -> Allows you to set a new loction as the default"
-			setKey := "| 'weather set-key' -> Allows you to add/replace a new applictaion key"
+			setDef := "| 'weather --set-default' -> Allows you to set a new loction as the default"
+			setKey := "| 'weather --set-key' -> Allows you to add/replace a new applictaion key"
 			diffLocation := "| 'weather {arg}' -> Gets the forecast for a location whatever city/town is specified as the arg"
 			extend := "| 'weather --extended' -> shows the next 5 days of forecast data. Can optionally use 'weather {arg} --extended'"
-
 			fmt.Printf(
 				"Available arguments:\n\n%s\n\n%s\n\n%s\n\n%s\n\n%s",
 				normal, setDef, setKey, diffLocation, extend,
 			)
 			return
+		}
 
-		case "set-default": // take input to replace default location in json file
+		if *v {
+			fmt.Println("v1.0.0")
+			return
+		}
+
+		if *setDefault {
 			newDefault := input("Enter the name of a UK city to set as your default: ")
 			err := updateDefaultCity(newDefault)
 			handleError(err)
 			return
+		}
 
-		case "set-key": // take input to replace default input in json file
+		if *extended {
+			e = true
+			defaultLocation = os.Args[1]
+		}
+
+		if *setKey {
 			newAppKey := input("Please enter your Met Office Application Key (visible): ")
 			err := updateAppKey(newAppKey)
 			handleError(err)
 			return
-
-		case "--extended":
-			extended = true
-
-		default: // Set
-			defaultLocation = os.Args[1]
 		}
+	}
+
+	if len(os.Args) > 2 && !strings.Contains(os.Args[2], "extended") {
+		fmt.Println("malformed request see `weather --help`")
+		return
+
+	} else if len(os.Args) > 3 {
+		fmt.Println("too many args - see `weather --help`")
+		return
 	}
 
 	if appKey == "" { // Ask for app key when field is empty in config file
@@ -68,9 +87,13 @@ func main() {
 		handleError(err)
 	}
 
+	if len(os.Args) > 1 {
+		defaultLocation = os.Args[1]
+	}
+
 	areaId := getSiteId(defaultLocation, appKey) // Return location ID from Met API
 
-	forecasts, err := getForecast(areaId, appKey, extended) // get forecasts
+	forecasts, err := getForecast(areaId, appKey, e) // get forecasts
 	handleError(err)
 
 	colorCity := formatColor(defaultLocation, "") // Format terminal output
@@ -123,7 +146,7 @@ func main() {
 				separatorLine, timeFinal, weatherType, temperature,
 				feelsLike, windSpeed, rainChance,
 			)
-			fmt.Printf(message)
+			fmt.Println(message)
 		}
 		println(separatorLine)
 	}
