@@ -1,6 +1,6 @@
 # A simple yet effective weather CLI 
 
-`weather` is an simple weather tool in the terminal.
+`weather` is a simple weather tool in the terminal.
 Add your Met Office API key to return real time wheather data to your exact location!
 
 ### About
